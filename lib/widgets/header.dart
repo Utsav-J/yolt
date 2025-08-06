@@ -1,109 +1,84 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
-import '../screens/tasks_screen.dart';
+import '../models/onboarding_data.dart';
+import '../services/onboarding_service.dart';
+import 'calendar_button.dart';
+import 'tasks_button.dart';
 
-class Header extends StatelessWidget {
-  const Header({super.key});
+class Header extends StatefulWidget {
+  final List<Task> tasks;
+
+  const Header({super.key, required this.tasks});
+
+  @override
+  State<Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<Header> {
+  TimeWindow? _planningWindow;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTimeWindows();
+  }
+
+  Future<void> _loadTimeWindows() async {
+    try {
+      final onboardingData = await OnboardingService.getOnboardingData();
+      setState(() {
+        _planningWindow = onboardingData?.planningWindow;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Sample tasks for navigation (replace with provider/state management in real app)
-    final List<Task> _tasks = [
-      Task(
-        id: '1',
-        title: 'Complete project presentation',
-        description: 'Prepare slides for the quarterly review meeting',
-        isCompleted: false,
-        priority: TaskPriority.high,
-        dueDate: DateTime.now().add(const Duration(days: 2)),
-      ),
-      Task(
-        id: '2',
-        title: 'Daily meditation',
-        description: '15 minutes of mindfulness practice',
-        isCompleted: true,
-        priority: TaskPriority.medium,
-        dueDate: DateTime.now(),
-      ),
-      Task(
-        id: '3',
-        title: 'Grocery shopping',
-        description: 'Buy ingredients for dinner tonight',
-        isCompleted: false,
-        priority: TaskPriority.low,
-        dueDate: DateTime.now().add(const Duration(hours: 3)),
-      ),
-    ];
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Calendar icon
+          const CalendarButton(),
+          // Time window display
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.calendar_today,
-              color: Color(0xFF8B5CF6),
-              size: 24,
-            ),
-          ),
-
-          // Streak counter
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            width: 160,
+            height: 40,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.local_fire_department,
-                  color: Color(0xFFFF6B35),
-                  size: 20,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '25 days',
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+            child: Center(
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF8B5CF6),
+                        ),
+                      ),
+                    )
+                  : Text(
+                      _planningWindow != null
+                          ? '${_planningWindow!.startTime.format(context)} - ${_planningWindow!.endTime.format(context)}'
+                          : 'Set Time Window',
+                      style: const TextStyle(
+                        color: Color(0xFF8B5CF6),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
             ),
           ),
-
-          // Tasks button
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TasksScreen(tasks: _tasks),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.task_alt,
-                color: Color(0xFF8B5CF6),
-                size: 24,
-              ),
-            ),
-          ),
+          TasksButton(tasks: widget.tasks),
         ],
       ),
     );

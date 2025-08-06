@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'quick_action_card.dart';
 
 class InfoCards extends StatelessWidget {
   const InfoCards({super.key});
@@ -99,17 +98,6 @@ class InfoCards extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-
-          // Quick Actions Row
-          Row(
-            children: [
-              Expanded(child: QuickActionCard('New insights', Icons.lightbulb)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: QuickActionCard('Compliment myself', Icons.favorite),
-              ),
-            ],
           ),
         ],
       ),

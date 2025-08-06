@@ -23,8 +23,6 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   bool _isRecording = false;
   late AnimationController _pulseController;
   late AnimationController _glowController;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _glowAnimation;
 
   // Sample tasks
   final List<Task> _tasks = [
@@ -69,14 +67,6 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     _glowController = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
-    );
-
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
   }
 
@@ -226,35 +216,47 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFF3E8FF), // Light purple
-              Color(0xFFFFF7ED), // Light peach
+              Color.fromARGB(255, 224, 203, 246), // Light purple
+              Color.fromARGB(255, 250, 224, 193), // Light peach
             ],
           ),
         ),
         child: SafeArea(
           child: Stack(
             children: [
-              // Backdrop "Good Morning" text
               const BackdropGreeting(),
-
               // Main content
               Column(
                 children: [
-                  const Header(),
-                  const WelcomeMessage(),
-                  const InfoCards(),
-                  const Spacer(),
-                  InputSection(
-                    isListening: _isListening,
-                    textController: _textController,
-                    startListening: _startListening,
-                    stopListening: _stopListening,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Header(tasks: _tasks),
+                          const WelcomeMessage(),
+                          const InfoCards(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: InputSection(
+                      isListening: _isListening,
+                      textController: _textController,
+                      startListening: _startListening,
+                      stopListening: _stopListening,
+                    ),
                   ),
                 ],
               ),
