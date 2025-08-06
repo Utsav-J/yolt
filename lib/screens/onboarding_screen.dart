@@ -130,16 +130,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      '${_currentPage + 1} of 4',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
                     Row(
                       children: List.generate(4, (index) {
                         return Container(
@@ -150,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             shape: BoxShape.circle,
                             color: index <= _currentPage
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.3),
+                                : Colors.white.withValues(alpha: 0.3),
                           ),
                         );
                       }),
@@ -181,6 +173,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         setState(() {
                           _userName = null;
                         });
+                        // Automatically advance to next screen
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
                       },
                     ),
                     PlanningTimeScreen(
@@ -216,15 +213,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               vertical: 18,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(30),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -240,7 +237,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: _canProceed()
                                         ? Colors.white
-                                        : Colors.white.withOpacity(0.5),
+                                        : Colors.white.withValues(alpha: 0.5),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -248,7 +245,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   Icons.arrow_forward,
                                   color: _canProceed()
                                       ? Colors.white
-                                      : Colors.white.withOpacity(0.5),
+                                      : Colors.white.withValues(alpha: 0.5),
                                   size: 20,
                                 ),
                               ],

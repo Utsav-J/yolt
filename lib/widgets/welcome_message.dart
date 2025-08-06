@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/onboarding_service.dart';
-import '../models/onboarding_data.dart';
 
 class WelcomeMessage extends StatefulWidget {
   const WelcomeMessage({super.key});

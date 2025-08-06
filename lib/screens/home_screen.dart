@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import '../services/task_service.dart';
 import '../widgets/header.dart';
-import '../widgets/backdrop_greeting.dart';
 import '../widgets/welcome_message.dart';
 import '../widgets/info_cards.dart';
 import '../widgets/input_section.dart';
@@ -24,39 +24,15 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   late AnimationController _pulseController;
   late AnimationController _glowController;
 
-  // Sample tasks
-  final List<Task> _tasks = [
-    Task(
-      id: '1',
-      title: 'Complete project presentation',
-      description: 'Prepare slides for the quarterly review meeting',
-      isCompleted: false,
-      priority: TaskPriority.high,
-      dueDate: DateTime.now().add(const Duration(days: 2)),
-    ),
-    Task(
-      id: '2',
-      title: 'Daily meditation',
-      description: '15 minutes of mindfulness practice',
-      isCompleted: true,
-      priority: TaskPriority.medium,
-      dueDate: DateTime.now(),
-    ),
-    Task(
-      id: '3',
-      title: 'Grocery shopping',
-      description: 'Buy ingredients for dinner tonight',
-      isCompleted: false,
-      priority: TaskPriority.low,
-      dueDate: DateTime.now().add(const Duration(hours: 3)),
-    ),
-  ];
+  // Dynamic tasks list
+  List<Task> _tasks = [];
 
   @override
   void initState() {
     super.initState();
     _initializeSpeech();
     _initializeAnimations();
+    _loadTasks();
   }
 
   void _initializeAnimations() {
@@ -81,6 +57,17 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     _glowController.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadTasks() async {
+    // Initialize with sample tasks if none exist
+    await TaskService.initializeWithSampleTasks();
+
+    // Load current tasks
+    final tasks = await TaskService.getCurrentTasks();
+    setState(() {
+      _tasks = tasks;
+    });
   }
 
   void _startListening() async {
@@ -229,36 +216,30 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
           ),
         ),
         child: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              const BackdropGreeting(),
-              // Main content
-              Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Header(tasks: _tasks),
-                          const WelcomeMessage(),
-                          const InfoCards(),
-                        ],
-                      ),
-                    ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Header(tasks: _tasks),
+                      const WelcomeMessage(),
+                      const InfoCards(), // No longer needs tasks parameter
+                    ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                    child: InputSection(
-                      isListening: _isListening,
-                      textController: _textController,
-                      startListening: _startListening,
-                      stopListening: _stopListening,
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: InputSection(
+                  isListening: _isListening,
+                  textController: _textController,
+                  startListening: _startListening,
+                  stopListening: _stopListening,
+                ),
               ),
             ],
           ),
