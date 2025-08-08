@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'task_service.dart';
 
 class AffirmationService {
-  static const String _baseUrl = 'https://3e173188656f.ngrok-free.app';
+  static const String _baseUrl = 'https://e66938bb1603.ngrok-free.app';
   static const String _lastFetchKey = 'last_affirmation_fetch';
   static const String _currentAffirmationKey = 'current_affirmation';
   static const String _lastErrorKey = 'last_affirmation_error';
@@ -53,7 +53,7 @@ class AffirmationService {
   }
 
   // Fetch new affirmation from API using current tasks
-  static Future<String?> fetchNewAffirmation() async {
+  static Future<Map<String, dynamic>?> fetchNewAffirmation() async {
     try {
       // Get current task titles from TaskService
       final taskTitles = await TaskService.getTaskTitles();
@@ -80,19 +80,29 @@ class AffirmationService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        if (data['success'] == true && data['affirmation'] != null) {
+        final String? affirmationTextCandidate =
+            (data['affirmationText'] ?? data['affirmation']) as String?;
+        final String timestamp =
+            (data['timestamp'] as String?) ?? DateTime.now().toIso8601String();
+
+        // Treat presence of affirmation text as success. Some backends may not include a 'success' flag.
+        if (affirmationTextCandidate != null) {
           // Save the new affirmation and timestamp
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_currentAffirmationKey, data['affirmation']);
           await prefs.setString(
-            _lastFetchKey,
-            DateTime.now().toIso8601String(),
+            _currentAffirmationKey,
+            affirmationTextCandidate,
           );
+          await prefs.setString(_lastFetchKey, timestamp);
 
           // Clear any previous error
           await prefs.remove(_lastErrorKey);
 
-          return data['affirmation'];
+          // Normalize return shape
+          return {
+            'affirmationText': affirmationTextCandidate,
+            'timestamp': timestamp,
+          };
         }
       }
 
@@ -108,13 +118,13 @@ class AffirmationService {
   }
 
   // Refresh affirmation (called on pull-to-refresh)
-  static Future<String?> refreshAffirmation() async {
+  static Future<Map<String, dynamic>?> refreshAffirmation() async {
     // Always fetch new affirmation on manual refresh
     return await fetchNewAffirmation();
   }
 
   // Get affirmation for display (either cached or fetch new)
-  static Future<String> getAffirmation() async {
+  static Future<Map<String, dynamic>> getAffirmation() async {
     // Check if we should fetch a new affirmation
     if (await shouldFetchNewAffirmation()) {
       final newAffirmation = await fetchNewAffirmation();
@@ -125,8 +135,22 @@ class AffirmationService {
 
     // Return cached affirmation or default
     final cachedAffirmation = await getCurrentAffirmation();
-    return cachedAffirmation ??
-        'I embrace the quiet strength within me to navigate the day with grace and purpose.';
+    if (cachedAffirmation != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedTimestamp =
+          prefs.getString(_lastFetchKey) ?? DateTime.now().toIso8601String();
+      return {
+        'affirmationText': cachedAffirmation,
+        'timestamp': cachedTimestamp,
+      };
+    }
+
+    // Default fallback
+    return {
+      'affirmationText':
+          'I embrace the quiet strength within me to navigate the day with grace and purpose.',
+      'timestamp': DateTime.now().toIso8601String(),
+    };
   }
 
   // Get user-friendly error message

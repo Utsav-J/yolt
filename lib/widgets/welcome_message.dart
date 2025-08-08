@@ -83,14 +83,7 @@ class _WelcomeMessageState extends State<WelcomeMessage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'How are you feeling today?',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
-            ),
-          ),
+
           const SizedBox(height: 20),
         ],
       ),

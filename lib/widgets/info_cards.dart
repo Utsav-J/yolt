@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../services/affirmation_service.dart';
 
 class InfoCards extends StatefulWidget {
@@ -12,6 +11,7 @@ class InfoCards extends StatefulWidget {
 class _InfoCardsState extends State<InfoCards> {
   String _currentAffirmation =
       'I embrace the quiet strength within me to navigate the day with grace and purpose.';
+  String _affirmationTimestamp = '';
   bool _isLoading = false;
   String? _lastError;
 
@@ -22,11 +22,12 @@ class _InfoCardsState extends State<InfoCards> {
   }
 
   Future<void> _loadAffirmation() async {
-    final affirmation = await AffirmationService.getAffirmation();
+    final affirmationData = await AffirmationService.getAffirmation();
     final error = await AffirmationService.getLastError();
 
     setState(() {
-      _currentAffirmation = affirmation;
+      _currentAffirmation = affirmationData["affirmationText"];
+      _affirmationTimestamp = affirmationData["timestamp"];
       _lastError = error;
     });
   }
@@ -37,11 +38,43 @@ class _InfoCardsState extends State<InfoCards> {
     });
 
     try {
-      final newAffirmation = await AffirmationService.refreshAffirmation();
+      // Only allow refresh if last timestamp is at least 24 hours old
+      DateTime? lastFetchUtc;
+      if (_affirmationTimestamp.isNotEmpty) {
+        try {
+          String ts = _affirmationTimestamp.trim();
+          if (ts.endsWith('Z') && ts.contains('+')) {
+            ts = ts.substring(0, ts.length - 1);
+          }
+          lastFetchUtc = DateTime.parse(ts).toUtc();
+        } catch (_) {
+          lastFetchUtc = null;
+        }
+      }
 
-      if (newAffirmation != null) {
+      if (lastFetchUtc != null) {
+        final nowUtc = DateTime.now().toUtc();
+        final hoursSince = nowUtc.difference(lastFetchUtc).inHours;
+        if (hoursSince < 24) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'You can refresh the affirmation once every 24 hours. (${24 - hoursSince}h remaining)',
+              ),
+              backgroundColor: Colors.grey[700],
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+      }
+
+      final newAffirmationData = await AffirmationService.refreshAffirmation();
+
+      if (newAffirmationData != null) {
         setState(() {
-          _currentAffirmation = newAffirmation;
+          _currentAffirmation = newAffirmationData["affirmationText"];
+          _affirmationTimestamp = newAffirmationData["timestamp"];
           _lastError = null; // Clear error on success
         });
 
@@ -186,55 +219,6 @@ class _InfoCardsState extends State<InfoCards> {
                   ),
                 ],
               ),
-            ),
-          ),
-
-          // Daily Overview Card
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateFormat('EEEE').format(DateTime.now()),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  DateFormat('MMM dd').format(DateTime.now()),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF8B5CF6),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Daily Overview',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
