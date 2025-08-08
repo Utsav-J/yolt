@@ -7,6 +7,7 @@ class InputSection extends StatelessWidget {
   final TextEditingController textController;
   final VoidCallback startListening;
   final VoidCallback stopListening;
+  final ValueChanged<String> onSubmit;
 
   const InputSection({
     super.key,
@@ -14,6 +15,7 @@ class InputSection extends StatelessWidget {
     required this.textController,
     required this.startListening,
     required this.stopListening,
+    required this.onSubmit,
   });
 
   @override
@@ -28,6 +30,7 @@ class InputSection extends StatelessWidget {
                   textController: textController,
                   startListening: startListening,
                   stopListening: stopListening,
+                  onSubmit: onSubmit,
                 ),
         ],
       ),

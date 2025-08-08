@@ -4,7 +4,7 @@ class Task {
   final String description;
   bool isCompleted;
   final TaskPriority priority;
-  final DateTime dueDate;
+  final DateTime? dueDate;
 
   Task({
     required this.id,
@@ -23,7 +23,7 @@ class Task {
       'description': description,
       'isCompleted': isCompleted,
       'priority': priority.toString().split('.').last,
-      'dueDate': dueDate.toIso8601String(),
+      'dueDate': dueDate?.toIso8601String(),
     };
   }
 
@@ -36,7 +36,9 @@ class Task {
       priority: TaskPriority.values.firstWhere(
         (e) => e.toString().split('.').last == json['priority'],
       ),
-      dueDate: DateTime.parse(json['dueDate']),
+      dueDate: json['dueDate'] != null && json['dueDate'] != ''
+          ? DateTime.parse(json['dueDate'])
+          : null,
     );
   }
 }

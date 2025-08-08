@@ -7,6 +7,7 @@ import '../widgets/info_cards.dart';
 import '../widgets/input_section.dart';
 import 'dart:convert'; // Added for json
 import 'package:http/http.dart' as http; // Added for http
+import 'tasks_screen.dart';
 
 class TaskTrackerHomeScreen extends StatefulWidget {
   const TaskTrackerHomeScreen({super.key});
@@ -121,6 +122,7 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     );
 
     try {
+      await _callExtractTasksFromTextAPI(input);
       // API Endpoint Placeholders
       await _callTaskCreationAPI(input);
       await _callAnalyticsAPI(input);
@@ -138,6 +140,86 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
+    }
+  }
+
+  Future<void> _callExtractTasksFromTextAPI(String input) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'https://221899cefcee.ngrok-free.app/extract-tasks-from-text',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': 'application/json',
+        },
+        body: json.encode({'text': input}),
+      );
+
+      // Print raw response
+      // ignore: avoid_print
+      print('extract-tasks-from-text: ${response.statusCode} ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          final decoded = json.decode(response.body) as Map<String, dynamic>;
+          final tasksEnvelope = decoded['tasks'] as Map<String, dynamic>?;
+          final List<dynamic> items =
+              (tasksEnvelope != null ? tasksEnvelope['tasks'] : null)
+                  as List<dynamic>? ??
+              [];
+
+          for (int i = 0; i < items.length; i++) {
+            final item = items[i] as Map<String, dynamic>;
+            final String title = (item['title'] ?? '').toString();
+            if (title.isEmpty) continue;
+            final String description = (item['description'] ?? '').toString();
+            final String priorityStr = (item['priority'] ?? 'medium')
+                .toString()
+                .toLowerCase();
+
+            TaskPriority priority;
+            switch (priorityStr) {
+              case 'high':
+                priority = TaskPriority.high;
+                break;
+              case 'low':
+                priority = TaskPriority.low;
+                break;
+              default:
+                priority = TaskPriority.medium;
+            }
+
+            final task = Task(
+              id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+              title: title,
+              description: description == 'null' ? '' : description,
+              isCompleted: false,
+              priority: priority,
+              dueDate: DateTime.now(),
+            );
+
+            await TaskService.addTask(task);
+          }
+
+          // After saving, navigate to TasksScreen with current tasks
+          final currentTasks = await TaskService.getCurrentTasks();
+          if (mounted) {
+            // ignore: use_build_context_synchronously
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TasksScreen(tasks: currentTasks),
+              ),
+            );
+          }
+        } catch (e) {
+          // ignore: avoid_print
+          print('Failed to parse tasks response: $e');
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error calling extract-tasks-from-text: $e');
     }
   }
 
@@ -239,6 +321,7 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
                   textController: _textController,
                   startListening: _startListening,
                   stopListening: _stopListening,
+                  onSubmit: _processInput,
                 ),
               ),
             ],

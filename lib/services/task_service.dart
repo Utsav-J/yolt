@@ -27,13 +27,12 @@ class TaskService {
     final allTasks = await getAllTasks();
     final today = DateTime.now();
 
+    final todayDate = DateTime(today.year, today.month, today.day);
+
     return allTasks.where((task) {
-      final taskDate = DateTime(
-        task.dueDate.year,
-        task.dueDate.month,
-        task.dueDate.day,
-      );
-      final todayDate = DateTime(today.year, today.month, today.day);
+      final due = task.dueDate;
+      if (due == null) return false;
+      final taskDate = DateTime(due.year, due.month, due.day);
       return taskDate.isAtSameMomentAs(todayDate);
     }).toList();
   }

@@ -83,14 +83,15 @@ class TaskCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Text(
-                    "Due:  {DateFormat('MMM dd, yyyy').format(task.dueDate)}",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                      fontWeight: FontWeight.w500,
+                  if (task.dueDate != null)
+                    Text(
+                      "Due:  " + task.dueDate!.toIso8601String(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
