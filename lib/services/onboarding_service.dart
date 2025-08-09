@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/onboarding_data.dart';
+import '../config/app_config.dart';
 
 class OnboardingService {
-  static const String _onboardingCompleteKey = 'onboardingComplete';
-  static const String _onboardingDataKey = 'onboardingData';
+  static const String _onboardingCompleteKey = AppConfig.onboardingCompleteKey;
+  static const String _onboardingDataKey = AppConfig.onboardingDataKey;
 
   // Check if onboarding is completed
   static Future<bool> isOnboardingComplete() async {

@@ -23,33 +23,29 @@ class TaskTrackerApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: const InitialScreen(),
     );
   }
 }
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class InitialScreen extends StatefulWidget {
+  const InitialScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<InitialScreen> createState() => _InitialScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _InitialScreenState extends State<InitialScreen> {
   @override
   void initState() {
     super.initState();
-    _checkOnboardingStatus();
+    _determineInitialScreen();
   }
 
-  Future<void> _checkOnboardingStatus() async {
-    // Add a small delay for splash effect
-    await Future.delayed(const Duration(milliseconds: 500));
+  Future<void> _determineInitialScreen() async {
+    final isOnboardingComplete = await OnboardingService.isOnboardingComplete();
 
     if (mounted) {
-      final isOnboardingComplete =
-          await OnboardingService.isOnboardingComplete();
-
       if (isOnboardingComplete) {
         // Initialize user preferences service
         await UserPreferencesService.initialize();
@@ -68,34 +64,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 224, 203, 246), // Light purple
-              Color.fromARGB(255, 250, 224, 193), // Light peach
-            ],
-          ),
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.task_alt, size: 100, color: Colors.white),
-              SizedBox(height: 20),
-              Text(
-                'Task Tracker',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
+    // Simple loading screen without delay
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
         ),
       ),
     );

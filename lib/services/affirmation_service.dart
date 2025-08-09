@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import 'task_service.dart';
 
 class AffirmationService {
-  static const String _baseUrl = 'https://e66938bb1603.ngrok-free.app';
-  static const String _lastFetchKey = 'last_affirmation_fetch';
-  static const String _currentAffirmationKey = 'current_affirmation';
-  static const String _lastErrorKey = 'last_affirmation_error';
+  static const String _lastFetchKey = AppConfig.lastAffirmationFetchKey;
+  static const String _currentAffirmationKey = AppConfig.currentAffirmationKey;
+  static const String _lastErrorKey = AppConfig.lastErrorKey;
 
   // Check if we need to fetch a new affirmation (24-hour check)
   static Future<bool> shouldFetchNewAffirmation() async {
@@ -41,8 +41,8 @@ class AffirmationService {
     try {
       final response = await http
           .get(
-            Uri.parse('$_baseUrl/health'),
-            headers: {'accept': 'application/json'},
+            Uri.parse('${AppConfig.baseUrl}/health'),
+            headers: AppConfig.getHeadersForUrl(AppConfig.baseUrl),
           )
           .timeout(const Duration(seconds: 5));
 
@@ -68,11 +68,8 @@ class AffirmationService {
 
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/generate-affirmation'),
-            headers: {
-              'Content-Type': 'application/json',
-              'accept': 'application/json',
-            },
+            Uri.parse(AppConfig.affirmationUrl),
+            headers: AppConfig.getHeadersForUrl(AppConfig.baseUrl),
             body: jsonEncode({'tasks': taskTitles.join('. ')}),
           )
           .timeout(const Duration(seconds: 10));

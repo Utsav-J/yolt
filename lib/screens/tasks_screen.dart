@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../widgets/task_card.dart';
+import '../services/task_service.dart';
 
 class TasksScreen extends StatefulWidget {
   final List<Task> tasks;
@@ -12,6 +13,21 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
+  List<Task> _currentTasks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTasks = List.from(widget.tasks);
+  }
+
+  Future<void> _refreshTasks() async {
+    final tasks = await TaskService.getCurrentTasks();
+    setState(() {
+      _currentTasks = tasks;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,12 +82,48 @@ class _TasksScreenState extends State<TasksScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: ListView.builder(
-                    itemCount: widget.tasks.length,
-                    itemBuilder: (context, index) {
-                      return TaskCard(task: widget.tasks[index]);
-                    },
-                  ),
+                  child: _currentTasks.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.task_alt_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No tasks yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Create your first task to get started!',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _refreshTasks,
+                          child: ListView.builder(
+                            itemCount: _currentTasks.length,
+                            itemBuilder: (context, index) {
+                              return TaskCard(
+                                task: _currentTasks[index],
+                                onTaskUpdated: _refreshTasks,
+                              );
+                            },
+                          ),
+                        ),
                 ),
               ),
             ],

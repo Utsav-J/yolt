@@ -5,6 +5,7 @@ import '../widgets/header.dart';
 import '../widgets/welcome_message.dart';
 import '../widgets/info_cards.dart';
 import '../widgets/input_section.dart';
+import '../config/app_config.dart';
 import 'dart:convert'; // Added for json
 import 'package:http/http.dart' as http; // Added for http
 import 'tasks_screen.dart';
@@ -22,8 +23,8 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   bool _speechEnabled = false;
   bool _isListening = false;
   bool _isRecording = false;
-  late AnimationController _pulseController;
-  late AnimationController _glowController;
+  late AnimationController _animationController;
+  late Animation<double> _breathingAnimation;
 
   // Dynamic tasks list
   List<Task> _tasks = [];
@@ -32,19 +33,21 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   void initState() {
     super.initState();
     _initializeSpeech();
-    _initializeAnimations();
+    _initializeAnimation();
     _loadTasks();
   }
 
-  void _initializeAnimations() {
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
+  void _initializeAnimation() {
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 6),
       vsync: this,
     );
-    _glowController = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
+
+    _breathingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
+    _animationController.repeat(reverse: true);
   }
 
   void _initializeSpeech() async {
@@ -54,8 +57,6 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
 
   @override
   void dispose() {
-    _pulseController.dispose();
-    _glowController.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -89,9 +90,6 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
       _isRecording = true;
     });
 
-    _pulseController.repeat(reverse: true);
-    _glowController.repeat(reverse: true);
-
     // Mock speech recognition - simulate listening for 3 seconds
     await Future.delayed(const Duration(seconds: 3));
 
@@ -107,8 +105,6 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
       _isListening = false;
       _isRecording = false;
     });
-    _pulseController.stop();
-    _glowController.stop();
   }
 
   void _processInput(String input) async {
@@ -122,18 +118,45 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     );
 
     try {
-      await _callExtractTasksFromTextAPI(input);
-      // API Endpoint Placeholders
-      await _callTaskCreationAPI(input);
-      await _callAnalyticsAPI(input);
-      await _callUserEngagementAPI(input);
+      // Try API first
+      bool apiSuccess = false;
+      try {
+        await _callExtractTasksFromTextAPI(input);
+        apiSuccess = true;
+      } catch (e) {
+        print('API failed, creating local task: $e');
+        // Create local task as fallback
+        final fallbackTask = Task(
+          id: '${DateTime.now().microsecondsSinceEpoch}',
+          title: input.trim(),
+          description: 'Created locally when API was unavailable',
+          isCompleted: false,
+          priority: TaskPriority.medium,
+          dueDate: DateTime.now().add(const Duration(days: 1)),
+        );
+        await TaskService.addTask(fallbackTask);
+        await _loadTasks();
+      }
+
+      // Other API calls (non-critical)
+      try {
+        await _callTaskCreationAPI(input);
+        await _callAnalyticsAPI(input);
+        await _callUserEngagementAPI(input);
+      } catch (e) {
+        print('Non-critical API calls failed: $e');
+      }
 
       _textController.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task added successfully!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text(
+            apiSuccess
+                ? 'Task added successfully!'
+                : 'Task created locally (API unavailable)',
+          ),
+          backgroundColor: apiSuccess ? Colors.green : Colors.orange,
         ),
       );
     } catch (e) {
@@ -146,13 +169,8 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   Future<void> _callExtractTasksFromTextAPI(String input) async {
     try {
       final response = await http.post(
-        Uri.parse(
-          'https://221899cefcee.ngrok-free.app/extract-tasks-from-text',
-        ),
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': 'application/json',
-        },
+        Uri.parse(AppConfig.extractTasksUrl),
+        headers: AppConfig.getHeadersForUrl(AppConfig.extractTasksUrl),
         body: json.encode({'text': input}),
       );
 
@@ -202,6 +220,9 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
             await TaskService.addTask(task);
           }
 
+          // Refresh local tasks after saving
+          await _loadTasks();
+
           // After saving, navigate to TasksScreen with current tasks
           final currentTasks = await TaskService.getCurrentTasks();
           if (mounted) {
@@ -228,8 +249,8 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     // POST /api/tasks/create
     try {
       final response = await http.post(
-        Uri.parse('https://your-api.com/api/tasks/create'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(AppConfig.createTaskUrl),
+        headers: AppConfig.getHeadersForUrl(AppConfig.createTaskUrl),
         body: json.encode({
           'title': input,
           'description': 'Created via voice/text input',
@@ -252,8 +273,8 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     // POST /api/analytics/user-input
     try {
       await http.post(
-        Uri.parse('https://your-api.com/api/analytics/user-input'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(AppConfig.analyticsUrl),
+        headers: AppConfig.getHeadersForUrl(AppConfig.analyticsUrl),
         body: json.encode({
           'input': input,
           'inputType': _isRecording ? 'voice' : 'text',
@@ -269,8 +290,8 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
     // POST /api/engagement/record
     try {
       await http.post(
-        Uri.parse('https://your-api.com/api/engagement/record'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(AppConfig.engagementUrl),
+        headers: AppConfig.getHeadersForUrl(AppConfig.engagementUrl),
         body: json.encode({
           'action': 'task_creation',
           'method': _isRecording ? 'voice' : 'text',
@@ -284,17 +305,25 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final breathValue = _breathingAnimation.value;
+    final xOffset =
+        0.0 + (breathValue * 0.15 - 0.075); // Range: -0.075 to 0.075
+    final yOffset = 0.8 + (breathValue * 0.1 - 0.05); // Range: 0.75 to 0.85
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 224, 203, 246), // Light purple
-              Color.fromARGB(255, 250, 224, 193), // Light peach
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(xOffset, yOffset),
+            radius: 1.7,
+            colors: const [
+              Color(0xFFFF9A9A), // Soft coral/pink
+              Color(0xFFE8A8C8), // Soft rose-pink (bridges coral to purple)
+              Color(0xFFB19CD9), // Soft purple
+              Color(0xFFD4C5E8), // Soft lavender (bridges purple to pink)
             ],
+            stops: const [-0.5, 0.3, 0.7, 0.95],
           ),
         ),
         child: SafeArea(
@@ -305,7 +334,7 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Header(tasks: _tasks),
+                      Header(tasks: _tasks, onTasksUpdated: _loadTasks),
                       const WelcomeMessage(),
                       const InfoCards(), // No longer needs tasks parameter
                     ],

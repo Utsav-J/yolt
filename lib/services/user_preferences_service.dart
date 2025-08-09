@@ -75,12 +75,16 @@ class UserPreferencesService {
     // Retrieve test data
     final retrievedData = await OnboardingService.getOnboardingData();
     print('Retrieved data: ${retrievedData?.userName}');
-    print(
-      'Planning window: ${retrievedData?.planningWindow?.startTime.hour}:${retrievedData?.planningWindow?.startTime.minute.toString().padLeft(2, '0')} - ${retrievedData?.planningWindow?.endTime.hour}:${retrievedData?.planningWindow?.endTime.minute.toString().padLeft(2, '0')}',
-    );
-    print(
-      'Reflection window: ${retrievedData?.reflectionWindow?.startTime.hour}:${retrievedData?.reflectionWindow?.startTime.minute.toString().padLeft(2, '0')} - ${retrievedData?.reflectionWindow?.endTime.hour}:${retrievedData?.reflectionWindow?.endTime.minute.toString().padLeft(2, '0')}',
-    );
+    if (retrievedData != null && retrievedData.planningWindow != null) {
+      print(
+        'Planning window: ${retrievedData.planningWindow.startTime.hour}:${retrievedData.planningWindow.startTime.minute.toString().padLeft(2, '0')} - ${retrievedData.planningWindow.endTime.hour}:${retrievedData.planningWindow.endTime.minute.toString().padLeft(2, '0')}',
+      );
+    }
+    if (retrievedData != null && retrievedData.reflectionWindow != null) {
+      print(
+        'Reflection window: ${retrievedData.reflectionWindow.startTime.hour}:${retrievedData.reflectionWindow.startTime.minute.toString().padLeft(2, '0')} - ${retrievedData.reflectionWindow.endTime.hour}:${retrievedData.reflectionWindow.endTime.minute.toString().padLeft(2, '0')}',
+      );
+    }
 
     // Clear test data
     await OnboardingService.clearOnboardingData();

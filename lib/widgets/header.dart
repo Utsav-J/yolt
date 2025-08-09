@@ -7,8 +7,9 @@ import 'tasks_button.dart';
 
 class Header extends StatefulWidget {
   final List<Task> tasks;
+  final VoidCallback? onTasksUpdated;
 
-  const Header({super.key, required this.tasks});
+  const Header({super.key, required this.tasks, this.onTasksUpdated});
 
   @override
   State<Header> createState() => _HeaderState();
@@ -78,7 +79,10 @@ class _HeaderState extends State<Header> {
                     ),
             ),
           ),
-          TasksButton(tasks: widget.tasks),
+          TasksButton(
+            tasks: widget.tasks,
+            onTasksUpdated: widget.onTasksUpdated,
+          ),
         ],
       ),
     );

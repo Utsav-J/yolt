@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
+import '../config/app_config.dart';
 
 class TaskService {
-  static const String _tasksKey = 'user_tasks';
+  static const String _tasksKey = AppConfig.userTasksKey;
 
   // Get all tasks
   static Future<List<Task>> getAllTasks() async {
@@ -97,6 +98,24 @@ class TaskService {
   static Future<List<String>> getTaskTitles() async {
     final currentTasks = await getCurrentTasks();
     return currentTasks.map((task) => task.title).toList();
+  }
+
+  // Clear all tasks (for debugging)
+  static Future<void> clearAllTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tasksKey);
+  }
+
+  // Get task count
+  static Future<int> getTaskCount() async {
+    final tasks = await getAllTasks();
+    return tasks.length;
+  }
+
+  // Get completed task count
+  static Future<int> getCompletedTaskCount() async {
+    final tasks = await getAllTasks();
+    return tasks.where((task) => task.isCompleted).length;
   }
 
   // Initialize with sample tasks if no tasks exist
