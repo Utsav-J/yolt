@@ -39,12 +39,17 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
 
   void _initializeAnimation() {
     _animationController = AnimationController(
-      duration: const Duration(seconds: 6),
+      duration: const Duration(
+        seconds: 4,
+      ), // Faster breathing - more noticeable
       vsync: this,
     );
 
     _breathingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOutSine, // Smoother, more natural breathing curve
+      ),
     );
 
     _animationController.repeat(reverse: true);
@@ -307,8 +312,10 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
   Widget build(BuildContext context) {
     final breathValue = _breathingAnimation.value;
     final xOffset =
-        0.0 + (breathValue * 0.15 - 0.075); // Range: -0.075 to 0.075
-    final yOffset = 0.8 + (breathValue * 0.1 - 0.05); // Range: 0.75 to 0.85
+        0.0 +
+        (breathValue * 0.6 - 0.3); // Range: -0.3 to 0.3 (4x more movement)
+    final yOffset =
+        0.8 + (breathValue * 0.4 - 0.2); // Range: 0.6 to 1.0 (4x more movement)
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -316,14 +323,14 @@ class _TaskTrackerHomeScreenState extends State<TaskTrackerHomeScreen>
         decoration: BoxDecoration(
           gradient: RadialGradient(
             center: Alignment(xOffset, yOffset),
-            radius: 1.7,
+            radius: 1.2 + (breathValue * 0.8), // Dynamic radius: 1.2 to 2.0
             colors: const [
               Color(0xFFFF9A9A), // Soft coral/pink
               Color(0xFFE8A8C8), // Soft rose-pink (bridges coral to purple)
               Color(0xFFB19CD9), // Soft purple
               Color(0xFFD4C5E8), // Soft lavender (bridges purple to pink)
             ],
-            stops: const [-0.5, 0.3, 0.7, 0.95],
+            stops: const [0, 0.3, 0.8, 1],
           ),
         ),
         child: SafeArea(

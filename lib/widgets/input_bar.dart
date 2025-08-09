@@ -23,13 +23,24 @@ class InputBar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.7),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.45),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
+              ),
               borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(-1, -1),
                 ),
               ],
             ),
@@ -40,7 +51,7 @@ class InputBar extends StatelessWidget {
                 hintText: 'What\'s in for today?',
                 border: InputBorder.none,
                 hintStyle: TextStyle(
-                  color: Color.fromARGB(120, 0, 0, 0),
+                  color: Color.fromARGB(200, 255, 255, 255),
                   fontSize: 16,
                 ),
               ),
@@ -59,19 +70,33 @@ class InputBar extends StatelessWidget {
             // height: 48,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.7),
-
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.45),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(-1, -1),
                 ),
               ],
             ),
             child: const Center(
-              child: Icon(Icons.mic, color: Color(0xFF8B5CF6), size: 22),
+              child: Icon(
+                Icons.mic,
+                color: Color.fromARGB(200, 255, 255, 255),
+                size: 22,
+              ),
             ),
           ),
         ),

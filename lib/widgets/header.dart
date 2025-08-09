@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yolt/config/app_config.dart';
 import '../models/task.dart';
 import '../models/onboarding_data.dart';
 import '../services/onboarding_service.dart';
@@ -52,8 +53,26 @@ class _HeaderState extends State<Header> {
             width: 160,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.2),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(-1, -1),
+                ),
+              ],
             ),
             child: Center(
               child: _isLoading
@@ -63,7 +82,7 @@ class _HeaderState extends State<Header> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF8B5CF6),
+                          AppConfig.headerIconColor,
                         ),
                       ),
                     )
@@ -72,7 +91,7 @@ class _HeaderState extends State<Header> {
                           ? '${_planningWindow!.startTime.format(context)} - ${_planningWindow!.endTime.format(context)}'
                           : 'Set Time Window',
                       style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
+                        color: AppConfig.headerIconColor,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yolt/config/app_config.dart';
 import '../models/task.dart';
 import '../screens/tasks_screen.dart';
 
@@ -24,37 +25,47 @@ class TasksButton extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            height: 48,
+            width: 48,
+            alignment: Alignment.center,
+            // padding: const EdgeInsets.all(),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.task_alt,
-              color: Color(0xFF8B5CF6),
-              size: 24,
-            ),
-          ),
-          if (pendingTasks > 0)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF8B5CF6),
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  pendingTasks > 99 ? '99+' : pendingTasks.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.2),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
               ),
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(-1, -1),
+                ),
+              ],
             ),
+            child: pendingTasks > 0
+                ? Text(
+                    pendingTasks > 99 ? '99+' : pendingTasks.toString(),
+                    style: const TextStyle(
+                      color: AppConfig.headerIconColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : const Icon(
+                    Icons.task_alt,
+                    color: AppConfig.headerIconColor,
+                    size: 24,
+                  ),
+          ),
         ],
       ),
     );

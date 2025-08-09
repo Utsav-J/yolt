@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 /// Centralized configuration file for the YOLT Task Tracker app
 /// Contains all constants, URLs, and configuration settings
 class AppConfig {
@@ -11,6 +13,7 @@ class AppConfig {
   /// Base URL for the main API (ngrok tunnel)
   /// Update this when the ngrok tunnel changes
   static const String baseUrl = 'https://e35f9e802329.ngrok-free.app';
+  static const Color headerIconColor = Color(0xFF8B5CF6);
 
   /// Alternative base URL for production/secondary APIs
   static const String secondaryBaseUrl = 'https://your-api.com';

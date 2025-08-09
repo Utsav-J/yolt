@@ -188,7 +188,7 @@ class _InfoCardsState extends State<InfoCards> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black.withValues(alpha: 0.85),
+                                color: Colors.black.withValues(alpha: 0.75),
                                 height: 1.4,
                               ),
                             ),
